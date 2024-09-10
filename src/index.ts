@@ -1,18 +1,13 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import { Env } from './types';
+import { scheduledQuizzes } from './quizGenerator';
 
 export default {
-	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
+	async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+		ctx.waitUntil(scheduledQuizzes(env));
+		console.log(`Cron trigger "${event.cron}" ran at ${new Date(event.scheduledTime).toUTCString()}`);
 	},
-} satisfies ExportedHandler<Env>;
+
+	async fetch(): Promise<Response> {
+		return new Response('Quiz bot is running. Quizzes are sent on a schedule.', { status: 200 });
+	},
+};
