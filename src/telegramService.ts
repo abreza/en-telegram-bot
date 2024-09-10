@@ -1,4 +1,4 @@
-import { Env, Quiz, ListeningQuestion } from './types';
+import { Env, Quiz, ReadingQuestion } from './types';
 
 export async function sendQuizzes(quizzes: Quiz[], env: Env): Promise<void> {
 	for (const [question, options, correctOptionId, solution] of quizzes) {
@@ -28,9 +28,9 @@ export async function sendQuizzes(quizzes: Quiz[], env: Env): Promise<void> {
 	}
 }
 
-export async function sendListeningQuestion(listeningQuestion: ListeningQuestion, env: Env): Promise<void> {
+export async function sendReadingQuestion(readingQuestion: ReadingQuestion, env: Env): Promise<void> {
 	try {
-		// Send the story
+		// Send the passage
 		await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
 			method: 'POST',
 			headers: {
@@ -38,13 +38,13 @@ export async function sendListeningQuestion(listeningQuestion: ListeningQuestion
 			},
 			body: JSON.stringify({
 				chat_id: env.TELEGRAM_CHAT_ID,
-				text: `Listening Comprehension Story:\n\n${listeningQuestion.story}`,
+				text: `Reading Comprehension Passage:\n\n${readingQuestion.passage}`,
 			}),
 		});
 
 		// Send the questions
-		await sendQuizzes(listeningQuestion.questions, env);
+		await sendQuizzes(readingQuestion.questions, env);
 	} catch (error) {
-		console.error(`Error sending listening question: ${error instanceof Error ? error.message : String(error)}`);
+		console.error(`Error sending reading question: ${error instanceof Error ? error.message : String(error)}`);
 	}
 }

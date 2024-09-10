@@ -1,7 +1,7 @@
 import { generateObject } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { z } from 'zod';
-import { Quiz, ListeningQuestion } from './types';
+import { Quiz, ReadingQuestion } from './types';
 
 const quizSchema = z.object({
 	quizzes: z
@@ -22,8 +22,8 @@ const quizSchema = z.object({
 		.length(10),
 });
 
-const listeningQuestionSchema = z.object({
-	story: z.string(),
+const readingQuestionSchema = z.object({
+	passage: z.string(),
 	questions: z
 		.array(
 			z.object({
@@ -73,22 +73,22 @@ export async function generateStructuredQuizzes(pastQuizzes: Quiz[], env: { OPEN
 	}
 }
 
-export async function generateListeningQuestion(env: { OPENAI_API_KEY: string }): Promise<ListeningQuestion> {
+export async function generateReadingQuestion(env: { OPENAI_API_KEY: string }): Promise<ReadingQuestion> {
 	try {
 		const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY });
 		const { object } = await generateObject({
 			model: openai('gpt-4o-mini-2024-07-18'),
-			schema: listeningQuestionSchema,
-			schemaName: 'ListeningQuestionSet',
-			schemaDescription: 'A listening comprehension question set with a story and related questions',
-			prompt: `Generate a short story (about 150-200 words) suitable for intermediate English learners.
-               Then, create 5 comprehension questions about the story.
+			schema: readingQuestionSchema,
+			schemaName: 'ReadingQuestionSet',
+			schemaDescription: 'A reading comprehension question set with a passage and related questions',
+			prompt: `Generate a short passage (about 150-200 words) suitable for intermediate English learners.
+               Then, create 5 comprehension questions about the passage.
                Each question should have 4 options in English, with one correct answer.
                Provide a solution explanation for each question in Persian.`,
 		});
 
 		return {
-			story: object.story,
+			passage: object.passage,
 			questions: object.questions.map((quiz) => [
 				quiz.question,
 				quiz.options.map((option) => option.text),
@@ -100,7 +100,7 @@ export async function generateListeningQuestion(env: { OPENAI_API_KEY: string })
 		if (error instanceof z.ZodError) {
 			console.error('Validation error:', error.errors);
 		} else {
-			console.error('Error generating listening question:', error);
+			console.error('Error generating reading question:', error);
 		}
 		throw error;
 	}

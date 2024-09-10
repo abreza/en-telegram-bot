@@ -1,19 +1,19 @@
 import { Env } from './types';
-import { generateStructuredQuizzes, generateListeningQuestion } from './structuredQuizGenerator';
+import { generateStructuredQuizzes, generateReadingQuestion } from './structuredQuizGenerator';
 import { getPastQuizzes, storeQuizzes, getTriggerCount, incrementTriggerCount } from './quizStorage';
-import { sendQuizzes, sendListeningQuestion } from './telegramService';
+import { sendQuizzes, sendReadingQuestion } from './telegramService';
 
 export async function scheduledQuizzes(env: Env): Promise<void> {
 	try {
 		const triggerCount = await getTriggerCount(env);
-		const isListeningQuestionTurn = triggerCount % 3 === 0;
+		const isReadingQuestionTurn = triggerCount % 3 === 0;
 
 		const pastQuizzes = await getPastQuizzes(env);
 
-		if (isListeningQuestionTurn) {
-			const listeningQuestion = await generateListeningQuestion(env);
-			await sendListeningQuestion(listeningQuestion, env);
-			await storeQuizzes(listeningQuestion.questions, env);
+		if (isReadingQuestionTurn) {
+			const readingQuestion = await generateReadingQuestion(env);
+			await sendReadingQuestion(readingQuestion, env);
+			await storeQuizzes(readingQuestion.questions, env);
 		} else {
 			const quizzes = await generateStructuredQuizzes(pastQuizzes, env);
 			await sendQuizzes(quizzes, env);
@@ -21,7 +21,7 @@ export async function scheduledQuizzes(env: Env): Promise<void> {
 		}
 
 		await incrementTriggerCount(env);
-		console.log(`${isListeningQuestionTurn ? 'Listening question' : 'Quizzes'} sent and stored successfully`);
+		console.log(`${isReadingQuestionTurn ? 'Reading question' : 'Quizzes'} sent and stored successfully`);
 	} catch (error) {
 		console.error(`An error occurred: ${error instanceof Error ? error.message : String(error)}`);
 	}
