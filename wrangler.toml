@@ -106,3 +106,6 @@ id = "d258ad27d84047f08436a12b84fda4e2"
 # [[vectorize]]
 # binding = "MY_INDEX"
 # index_name = "my-index"
+
+[triggers]
+crons = ["0 */8 * * *"]

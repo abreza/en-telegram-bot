@@ -19,3 +19,13 @@ export async function storeQuizzes(newQuizzes: Quiz[], env: Env): Promise<void> 
 		console.error(`Error storing quizzes: ${error instanceof Error ? error.message : String(error)}`);
 	}
 }
+
+export async function getTriggerCount(env: Env): Promise<number> {
+	const count = await env.EN_BOT.get('trigger_count');
+	return count ? parseInt(count, 10) : 0;
+}
+
+export async function incrementTriggerCount(env: Env): Promise<void> {
+	const count = await getTriggerCount(env);
+	await env.EN_BOT.put('trigger_count', (count + 1).toString());
+}

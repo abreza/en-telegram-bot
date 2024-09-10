@@ -6,3 +6,8 @@ export interface Env {
 }
 
 export type Quiz = [string, string[], number, string];
+
+export type ListeningQuestion = {
+	story: string;
+	questions: Quiz[];
+};

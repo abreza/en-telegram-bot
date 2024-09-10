@@ -1,7 +1,7 @@
 import { generateObject } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { z } from 'zod';
-import { Quiz } from './types';
+import { Quiz, ListeningQuestion } from './types';
 
 const quizSchema = z.object({
 	quizzes: z
@@ -20,6 +20,26 @@ const quizSchema = z.object({
 			})
 		)
 		.length(10),
+});
+
+const listeningQuestionSchema = z.object({
+	story: z.string(),
+	questions: z
+		.array(
+			z.object({
+				question: z.string(),
+				options: z
+					.array(
+						z.object({
+							text: z.string(),
+							is_correct: z.boolean(),
+						})
+					)
+					.length(4),
+				solution: z.string(),
+			})
+		)
+		.length(5),
 });
 
 export async function generateStructuredQuizzes(pastQuizzes: Quiz[], env: { OPENAI_API_KEY: string }): Promise<Quiz[]> {
@@ -48,6 +68,39 @@ export async function generateStructuredQuizzes(pastQuizzes: Quiz[], env: { OPEN
 			console.error('Validation error:', error.errors);
 		} else {
 			console.error('Error generating quizzes:', error);
+		}
+		throw error;
+	}
+}
+
+export async function generateListeningQuestion(env: { OPENAI_API_KEY: string }): Promise<ListeningQuestion> {
+	try {
+		const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY });
+		const { object } = await generateObject({
+			model: openai('gpt-4o-mini-2024-07-18'),
+			schema: listeningQuestionSchema,
+			schemaName: 'ListeningQuestionSet',
+			schemaDescription: 'A listening comprehension question set with a story and related questions',
+			prompt: `Generate a short story (about 150-200 words) suitable for intermediate English learners.
+               Then, create 5 comprehension questions about the story.
+               Each question should have 4 options in English, with one correct answer.
+               Provide a solution explanation for each question in Persian.`,
+		});
+
+		return {
+			story: object.story,
+			questions: object.questions.map((quiz) => [
+				quiz.question,
+				quiz.options.map((option) => option.text),
+				quiz.options.findIndex((option) => option.is_correct),
+				quiz.solution,
+			]),
+		};
+	} catch (error) {
+		if (error instanceof z.ZodError) {
+			console.error('Validation error:', error.errors);
+		} else {
+			console.error('Error generating listening question:', error);
 		}
 		throw error;
 	}
