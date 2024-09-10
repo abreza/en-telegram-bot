@@ -1,4 +1,5 @@
 import { Env, Quiz, ReadingQuestion } from './types';
+import OpenAI from 'openai';
 
 export async function sendQuizzes(quizzes: Quiz[], env: Env): Promise<void> {
 	for (const [question, options, correctOptionId, solution] of quizzes) {
@@ -30,7 +31,6 @@ export async function sendQuizzes(quizzes: Quiz[], env: Env): Promise<void> {
 
 export async function sendReadingQuestion(readingQuestion: ReadingQuestion, env: Env): Promise<void> {
 	try {
-		// Send the passage
 		await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
 			method: 'POST',
 			headers: {
@@ -42,7 +42,29 @@ export async function sendReadingQuestion(readingQuestion: ReadingQuestion, env:
 			}),
 		});
 
-		// Send the questions
+		const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+		const mp3 = await openai.audio.speech.create({
+			model: 'tts-1',
+			voice: 'alloy',
+			input: readingQuestion.passage,
+		});
+
+		const arrayBuffer = await mp3.arrayBuffer();
+		const uint8Array = new Uint8Array(arrayBuffer);
+
+		const formData = new FormData();
+		formData.append('chat_id', env.TELEGRAM_CHAT_ID);
+		formData.append('audio', new Blob([uint8Array], { type: 'audio/mpeg' }), 'reading_passage.mp3');
+
+		const audioResponse = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendAudio`, {
+			method: 'POST',
+			body: formData,
+		});
+
+		if (!audioResponse.ok) {
+			throw new Error(`HTTP error! status: ${audioResponse.status}`);
+		}
+
 		await sendQuizzes(readingQuestion.questions, env);
 	} catch (error) {
 		console.error(`Error sending reading question: ${error instanceof Error ? error.message : String(error)}`);
