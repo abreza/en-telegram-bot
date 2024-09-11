@@ -50,11 +50,13 @@ export async function generateStructuredQuizzes(pastQuizzes: Quiz[], env: { OPEN
 			schema: quizSchema,
 			schemaName: 'EnglishQuizSet',
 			schemaDescription: 'A set of English language quizzes for intermediate learners',
-			prompt: `Generate 10 English quiz questions about vocabulary, grammar, idioms, or everyday phrases.
-               Include 5 basic questions and 5 intermediate questions.
-               Each question should have 4 options in English, with one correct answer.
-               Provide a solution explanation for each question in Persian.
-               Avoid generating questions that are identical or very similar to these past questions: ${JSON.stringify(pastQuizzes)}`,
+			prompt: `Generate 10 unique English quiz questions about vocabulary, grammar, idioms, or everyday phrases.
+                     Include 5 basic questions and 5 intermediate questions.
+                     Each question should have 4 options in English, with one correct answer.
+                     Provide a solution explanation for each question in Persian.
+                     Ensure diversity in topics and question types.
+                     Avoid generating questions that are identical or very similar to these past questions: ${JSON.stringify(pastQuizzes)}`,
+			temperature: 1.2,
 		});
 
 		return object.quizzes.map((quiz) => [
@@ -81,10 +83,13 @@ export async function generateReadingQuestion(env: { OPENAI_API_KEY: string }): 
 			schema: readingQuestionSchema,
 			schemaName: 'ReadingQuestionSet',
 			schemaDescription: 'A reading comprehension question set with a passage and related questions',
-			prompt: `Generate a short passage (about 150-200 words) suitable for intermediate English learners.
-               Then, create 5 comprehension questions about the passage.
-               Each question should have 4 options in English, with one correct answer.
-               Provide a solution explanation for each question in Persian.`,
+			prompt: `Generate a unique short passage (about 150-200 words) suitable for intermediate English learners.
+                     The passage should cover an interesting topic.
+                     Then, create 5 diverse comprehension questions about the passage.
+                     Each question should have 4 options in English, with one correct answer.
+                     Ensure the questions test different aspects of comprehension (main idea, details, inference, vocabulary, etc.).
+                     Provide a solution explanation for each question in Persian.`,
+			temperature: 1.2,
 		});
 
 		return {
